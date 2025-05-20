@@ -314,7 +314,7 @@ project = Project(
     title=TRACKER_ID,
     project_html='''
         <img class="project-logo" alt="Project logo" src="https://wiki.archiveteam.org/images/a/a6/Radio-free-europa-icon.png" height="50px" title=""/>
-        <h2>Radio Free Europe/Radio Liberty <span class="links"><a href="https://www.rferl.org/">Website</a> &middot; <a href="https://tracker.archiveteam.org/rferl/">Leaderboard</a> &middot; <a href="https://wiki.archiveteam.org/index.php/Voice_of_America">Wiki</a></span></h2>
+        <h2>Radio Free Europe/Radio Liberty <span class="links"><a href="https://www.rferl.org/">Website</a> &middot; <a href="https://tracker.archiveteam.org/rferl/">Leaderboard</a> &middot; <a href="https://wiki.archiveteam.org/index.php/Radio_Free_Europe/Radio_Liberty">Wiki</a></span></h2>
         <p>Archiving Radio Free Europe/Radio Liberty.</p>
     '''
 )

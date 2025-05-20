@@ -1,6 +1,6 @@
-# voiceofamerica-grab
+# rferl-grab
 
-More information about the archiving project can be found on the ArchiveTeam wiki: [Voice of America](https://wiki.archiveteam.org/index.php?title=Voice_of_America)
+More information about the archiving project can be found on the ArchiveTeam wiki: [Radio Free Europe/Radio Liberty](https://wiki.archiveteam.org/index.php?title=Radio_Free_Europe/Radio_Liberty)
 
 ## Setup instructions
 
@@ -23,7 +23,7 @@ We strongly encourage you to join the IRC channel associated with this project i
 
 #### Archive Team Warrior (recommended for most users)
 
-This and other archiving projects can easily be run using the [Archive Team Warrior](https://wiki.archiveteam.org/index.php/ArchiveTeam_Warrior) virtual machine. Follow the [instructions on the Archive Team wiki](https://wiki.archiveteam.org/index.php/ArchiveTeam_Warrior) for installing the Warrior, and from the web interface running at `http://localhost:8001/`, enter the nickname that you want to be shown as on the tracker. There is no registration, just pick a nickname you like. Then, select the `Voice of America` project in the Warrior interface.
+This and other archiving projects can easily be run using the [Archive Team Warrior](https://wiki.archiveteam.org/index.php/ArchiveTeam_Warrior) virtual machine. Follow the [instructions on the Archive Team wiki](https://wiki.archiveteam.org/index.php/ArchiveTeam_Warrior) for installing the Warrior, and from the web interface running at `http://localhost:8001/`, enter the nickname that you want to be shown as on the tracker. There is no registration, just pick a nickname you like. Then, select the `Radio Free Europe/Radio Liberty` project in the Warrior interface.
 
 #### Project-specific Docker container (for more advanced users)
 
@@ -35,7 +35,7 @@ It is advised to use [Watchtower](https://github.com/containrrr/watchtower) to a
 
 after which the project container can be run:
 
-    docker run -d --name archiveteam --label=com.centurylinklabs.watchtower.enable=true --log-driver json-file --log-opt max-size=50m --restart=unless-stopped atdr.meo.ws/archiveteam/voiceofamerica-grab --concurrent 1 YOURNICKHERE
+    docker run -d --name archiveteam --label=com.centurylinklabs.watchtower.enable=true --log-driver json-file --log-opt max-size=50m --restart=unless-stopped atdr.meo.ws/archiveteam/rferl-grab --concurrent 1 YOURNICKHERE
 
 Be sure to replace `YOURNICKHERE` with the nickname that you want to be shown as on the tracker. There is no registration, just pick a nickname you like.
 

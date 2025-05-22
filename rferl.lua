@@ -803,7 +803,8 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     if status_code == 403 then
       maxtries = 10
     end
-    if status_code == 404 then
+    if status_code == 404
+      or status_code == 500 then
       tries = maxtries + 1
     end
     if tries > maxtries then

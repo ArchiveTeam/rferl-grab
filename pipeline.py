@@ -78,7 +78,7 @@ if not WGET_AT:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = '20250523.01'
+VERSION = '20250530.01'
 USER_AGENT = 'Archive Team (https://wiki.archiveteam.org/; email archiveteam@archiveteam.org)'
 TRACKER_ID = 'rferl'
 TRACKER_HOST = 'legacy-api.arpa.li'
@@ -190,13 +190,14 @@ class SetBadUrls(SimpleTask):
     def process(self, item):
         item['item_name_original'] = item['item_name']
         items = item['item_name'].split('\0')
-        items_lower = [normalize_string(s) for s in items]
+        items_lower = [normalize_string(s) if not s.startswith('article:') else ':'.join(s.split(':')[:2]) for s in items]
         with open('%(item_dir)s/%(warc_file_base)s_bad-items.txt' % item, 'r') as f:
             for s in {
-                normalize_string(s) for s in f
+                normalize_string(s) if not s.startswith('article:') else ':'.join(s.split(':')[:2])
+                for s in f
             }:
                 index = items_lower.index(s)
-                item.log_output('Item {} is aborted.'.format(s))
+                item.log_output('Item {} is aborted.'.format(items[index]))
                 items.pop(index)
                 items_lower.pop(index)
         item['item_name'] = '\0'.join(items)
@@ -280,13 +281,23 @@ class WgetArgs(object):
                 concurrency = 2
         item['concurrency'] = str(concurrency)
 
+        checked_ids = set()
+
         for item_name in item['item_name'].split('\0'):
             wget_args.extend(['--warc-header', 'x-wget-at-project-item-name: '+item_name])
             wget_args.append('item-name://'+item_name)
             item_type, item_value = item_name.split(':', 1)
             if item_type == 'article':
-                wget_args.extend(['--warc-header', 'rferl-article: '+item_value])
-                wget_args.append('https://www.rferl.org/a/{}.html'.format(item_value))
+                if item_value.count(':') == 0:
+                    item_value += ':rferl.org'
+                article, site = item_value.split(':')
+                if site.count('.') == 1:
+                    site = 'www.' + site
+                if article in checked_ids:
+                    raise ValueError('Article {} was already checked.'.format(article))
+                checked_ids.add(article)
+                wget_args.extend(['--warc-header', 'rferl-article: '+article])
+                wget_args.append('https://{}/a/{}.html'.format(site, article))
             elif item_type == 'asset':
                 url = 'https://' + item_value
                 wget_args.extend(['--warc-header', 'rferl-asset: '+url])

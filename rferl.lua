@@ -30,14 +30,14 @@ local ids = {}
 local asset_patterns = {
   --["^https?://([^/]*akamaized%.net/.+)$"]="asset",
   --["^https?://(av%.rferl%.org/.+)$"]="asset",
-  ["^https?://(gdb%.rferl%.org/.+)$"]="asset",
+  ["^https?://(gdb%.[^/]+/.+)$"]="asset",
   --["^https?://(media%.rferl%.org/.+)$"]="asset",
   ["^https?://(ssc%.[^/]*/.+)$"]="asset",
   ["^https?://(tags%.[^/]*/.+)$"]="asset",
   ["^https?://projects%.rferl%.org/([^/]*)"]="project"
 }
 local item_patterns = {
-  ["^https?://www%.rferl%.org/a/([0-9]+)%.html$"]="article"
+  ["^https?://[^/]+/a/([0-9]+)%.html$"]="article"
 }
 for k, v in pairs(asset_patterns) do
   item_patterns[k] = v
@@ -73,11 +73,11 @@ is_supported_media = function(d, must_match)
     if type(v) == "string"
       and string.match(v, "^https?://") then
       if string.match(v, "^https?://[^/]*akamaized%.net/.")
-        or string.match(v, "^https?://av%.rferl%.org/.")
-        or string.match(v, "^https?://rfe%-video%.rferl%.org/.")
-        or string.match(v, "^https?://rfe%-video%-hls%.rferl%.org/.")
-        or string.match(v, "^https?://rfe%-audio%.rferl%.org/.")
-        or string.match(v, "^https?://rfe%-audio%-hls%.rferl%.org/.") then
+        or string.match(v, "^https?://av%.[^/]+/.")
+        or string.match(v, "^https?://rfe%-video%.[^/]+/.")
+        or string.match(v, "^https?://rfe%-video%-hls%.[^/]+/.")
+        or string.match(v, "^https?://rfe%-audio%.[^/]+/.")
+        or string.match(v, "^https?://rfe%-audio%-hls%.[^/]+/.") then
         any_match = true
       elseif must_match then
         error("Unexpected media URL " .. v)
@@ -163,7 +163,10 @@ end
 set_item = function(url)
   found = find_item(url)
   if found then
-    local newcontext = {["any_200"]=false}
+    local newcontext = {
+      ["any_200"]=false,
+      ["sites_tested"]={}
+    }
     new_item_type = found["type"]
     new_item_value = found["value"]
     new_item_name = new_item_type .. ":" .. new_item_value
@@ -237,13 +240,13 @@ allowed = function(url, parenturl)
     or string.match(url, "^https?://a/$")
     or string.match(url, "^https?://ssc%.")
     or string.match(url, "^https?://[^/]*disqus%.com/")
-    or string.match(url, "^https?://gdb%.rferl%.org/Tealium%.aspx%?")
+    or string.match(url, "^https?://gdb%.[^/]+/Tealium%.aspx%?")
     or string.match(url, "^https?://test%-ltr%.rferl%.eu/")
     or string.match(url, "^https?://morigin%.")
     or string.match(url, "^https?://origin%-test%.")
-    or string.match(url, "^https?://im%-media%.voltron%.rferl%.org/")
+    or string.match(url, "^https?://im%-media%.voltron%.[^/]+/")
     or string.match(url, "^https?://[^/]*@")
-    or string.match(url, "^https?://media%.voltron%.rferl%.org/") then
+    or string.match(url, "^https?://media%.voltron%.[^/]+/") then
     return false
   end
 
@@ -354,7 +357,10 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     end
     checked[newurl] = true
     if string.match(newurl, "^%s") then
-      newurl = string.match(newurl, "^%s*(.-)%s*$")
+      for newurl2 in string.gmatch(newurl, "([^%s]+)") do
+        check(newurl2)
+      end
+      return nil
     end
     if not string.match(newurl, "^https?://") then
       return nil
@@ -389,8 +395,8 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
         url_ = string.match(url_, "^https?://[^/]+(https?://.+)$")
       end
     end
-    if string.match(url_, "^https?://gdb%.rferl%.org/[^/]+$")
-      and not string.match(url_, "^https?://gdb%.rferl%.org/Tealium%.aspx%?") then
+    if string.match(url_, "^https?://gdb%.[^/]+/[^/]+$")
+      and not string.match(url_, "^https?://gdb%.[^/]+/Tealium%.aspx%?") then
       if not string.match(url_, "_s%....?.?$") then
         local a, b = string.match(url_, "^(https?://.+)(%....?.?)$")
         local url2 = a .. "_s" .. b
@@ -405,6 +411,9 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       if string.match(url_, "/[^/_]+_[^/]+$") then
         local a, b = string.match(url_, "^(.+/[^_]+)_[^%.]+(%.[^%./_]+)$")
         check(a .. b)
+      end
+      if string.match(url_, "^https?://([^/]+)") ~= "gdb.rferl.org" then
+        check("https://gdb.rferl.org" .. string.match(url_, "^https?://[^/]+(/.+)$"))
       end
     end
     if not processed(url_)
@@ -531,7 +540,9 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     return result
   end
 
-  if item_type == "article" then
+  if item_type == "article"
+    and status_code == 404
+    and string.match(url, "^https?://[^/]+/a/[0-9]+%.html$") then
     for site, _ in pairs(rferlsites) do
       extra = ""
       if not string.match(site, "%..+%.") then
@@ -657,7 +668,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     if context["sizes"] then
       for img_data in string.gmatch(html, "(<img%s[^>]+>)") do
         local src = string.match(img_data, "src=\"([^\"]+)\"")
-        if src and string.match(src, "^https?://gdb%.rferl%.org/.")
+        if src and string.match(src, "^https?://gdb%.[^/]+/.")
           and string.match(src, "_w[0-9]+[_%.]") then
           local a, b = string.match(src, "^(https?://.+_w)[0-9]+([_%.].+)$")
           local b, c = string.match(b, "^(.*)(%.[^%.]+)$")
